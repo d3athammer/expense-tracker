@@ -8,9 +8,6 @@ import ExpenseList from './Component/ExpenseList';
 import ExpenseFilter from './Component/ExpenseFilter';
 import ExpenseForm from './Component/ExpenseForm';
 
-// make sure it's a constant so you are able to manipulate the data
-export const categories = [ 'Groceries', 'Utilities', 'Entertainment'] as const;
-
 function App() {
 
   // set state for expenses
@@ -31,7 +28,8 @@ function App() {
   return (
     <>
     <ChakraProvider>
-      <ExpenseForm/ >
+      {/* generates new array of objects, as well as a new object of expense, with an added id */}
+      <ExpenseForm onSubmit={expense => setExpenses([...expenses, {...expense, id: expenses.length + 1}]) }/ >
     </ChakraProvider>
       <div className="mx-4 mb-3 w-100">
       <ExpenseFilter onSelectCategory={(category) => setSelectedCategory(category)} />

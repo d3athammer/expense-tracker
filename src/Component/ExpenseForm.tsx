@@ -13,16 +13,26 @@ const schema = z.object({
   })
 })
 
+interface Props {
+  onSubmit: (data: ExpenseFormData) => void;
+}
+
 type ExpenseFormData = z.infer<typeof schema>;
 
 
-const Form = () => {
-  const { register, handleSubmit, formState: {errors} } = useForm<ExpenseFormData>({ resolver: zodResolver(schema)})
+const Form = ({ onSubmit } : Props ) => {
+  // calling reset from react hook form allows us to clear the form
+  const { reset, register, handleSubmit, formState: {errors} } = useForm<ExpenseFormData>({ resolver: zodResolver(schema)})
 
   return (
     <div className="container mt-4">
       <div className="topside">
-        <form onSubmit={handleSubmit(data => console.log(data))}>
+        {/* they are JavaScript expressions that need to be evaluated.
+        The curly braces allow JavaScript expressions to be embedded inside JSX. */}
+        <form onSubmit={handleSubmit(data=> {
+          onSubmit(data);
+          reset();
+          })}>
           <Box display="flex" flexDirection="column" ms={4}>
             <FormControl>
               <FormLabel>Description</FormLabel>
