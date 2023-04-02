@@ -1,4 +1,5 @@
-import axios from "axios"
+import { border } from "@chakra-ui/react";
+import axios, { CanceledError } from "axios"
 import { useEffect, useState } from "react"
 
 interface User {
@@ -9,20 +10,63 @@ interface User {
 const TestLink = () => {
   const [ users, setUsers ] = useState<User[]>([]);
   const [ error, setError ] = useState('');
+  // set loader state
+  const [ isLoading, setLoading ] = useState(false);
 
   useEffect(() =>{
     // get -> promise -> res / err
+    //allows you to abort one or more Web requests as and when desired.
+    //Using its constructor, a very standard way to cancel or abort asynchronous operations
+    const controller = new AbortController();
+
+    //display loader
+    setLoading(true);
+
     axios
-    .get<User[]>('https://jsonplaceholder.typicode.com/xusers')
-    .then(res => setUsers(res.data))
-    .catch(err => setError(err.message));
-  })
+    // configuration object as the 2nd parameter
+    .get<User[]>('https://jsonplaceholder.typicode.com/users', {signal: controller.signal})
+    .then(res => {
+      setUsers(res.data)
+      // deactive where our promise is settled, accepted
+      setLoading(false)})
+
+    .catch(err => {
+      // if the error thrown by Axios was due to a cancellation of the request,
+      //using the AbortController instance.
+      if (err instanceof CanceledError) return;
+      // otherwise, display error message
+      setError(err.message);
+    // deactive where our promise is settled, rejected
+      setLoading(false);
+    });
+      //
+    return () => controller.abort();
+  },[])
+  // User interface was defined above
+  const deleteUser = (user: User) => {
+    const oriUsers = [...users]
+    setUsers(users.filter(u =>  u.id !== user.id))
+
+    axios.delete(`https://jsonplaceholder.typicode.com/users/${user.id}`)
+      .catch(err => {
+        setError(err.message)
+        setUsers(oriUsers)
+      })
+  }
 
   return (
     <>
      {error && <p className="text-danger">{error}</p>}
+     {/* display loading spinner while loading */}
+     {isLoading && <div className="spinner-border"></div>}
     <div>
-      <ul>{users.map((user) => <li key={user.id}>{user.name}</li>)}</ul>
+      <ul className="list-group">
+        {users.map((user) =>
+        <li className="list-group-item d-flex justify-content-between" key={user.id}>{user.name}
+        <button className="btn btn-outline-danger" key={user.id} onClick={() => deleteUser(user)}>Delete</button>
+        </li>
+        )}
+      </ul>
     </div>
     </>
   )
