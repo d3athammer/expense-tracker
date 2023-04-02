@@ -59,7 +59,6 @@ const Form = ({ onSubmit } : Props ) => {
             <FormControl>
               <FormLabel>Category</FormLabel>
               <Select {...register('category')} id="category" placeholder=" ">
-                <option value=" "></option>
                 {categories.map((category) =>
                   <option key={category} value={category}>{category}</option>
                 )}

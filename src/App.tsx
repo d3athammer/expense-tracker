@@ -7,6 +7,7 @@ import { ChakraProvider } from '@chakra-ui/react'
 import ExpenseList from './Component/ExpenseList';
 import ExpenseFilter from './Component/ExpenseFilter';
 import ExpenseForm from './Component/ExpenseForm';
+import TestLink from './Component/TestLink';
 
 function App() {
 
@@ -39,6 +40,9 @@ function App() {
           expenses={visibleExpenses}
           onDelete={(id) => setExpenses(expenses.filter( e => e.id !== id))}
         />
+      </div>
+      <div>
+        <TestLink/>
       </div>
     </>
   )
