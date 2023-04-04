@@ -1,11 +1,7 @@
 import { border } from "@chakra-ui/react";
-import apiClient, { CanceledError } from "../services/api-client";
+import { CanceledError } from "../services/api-client";
 import { useEffect, useState } from "react"
-
-interface User {
-  id: number;
-  name: string;
-}
+import userService,{ User } from "../services/user-service";
 
 const TestLink = () => {
   //create user, user as empty array
@@ -20,30 +16,24 @@ const TestLink = () => {
     // get -> promise -> res / err
     //allows you to abort one or more Web requests as and when desired.
     //Using its constructor, a very standard way to cancel or abort asynchronous operations
-    const controller = new AbortController();
-
     //display loader
     setLoading(true);
-
-    apiClient
-    // configuration object as the 2nd parameter
-    .get<User[]>('/users', {signal: controller.signal})
-    .then(res => {
-      setUsers(res.data)
-      // deactive where our promise is settled, accepted
-      setLoading(false)})
-
-    .catch(err => {
-      // if the error thrown by Axios was due to a cancellation of the request,
-      //using the AbortController instance.
-      if (err instanceof CanceledError) return;
-      // otherwise, display error message
-      setError(err.message);
-    // deactive where our promise is settled, rejected
-      setLoading(false);
-    });
+    const {request, cancel} = userService.getAllUsers();
+      request.then(res => {
+        setUsers(res.data)
+        // deactive where our promise is settled, accepted
+        setLoading(false)})
+      .catch(err => {
+        // if the error thrown by Axios was due to a cancellation of the request,
+        //using the AbortController instance.
+        if (err instanceof CanceledError) return;
+        // otherwise, display error message
+        setError(err.message);
+      // deactive where our promise is settled, rejected
+        setLoading(false);
+      });
       //
-    return () => controller.abort();
+    return () => cancel();
   },[])
 
   //Delete user
@@ -51,7 +41,8 @@ const TestLink = () => {
     const oriUsers = [...users]
     setUsers(users.filter(u =>  u.id !== user.id))
 
-    apiClient.delete(`/users/${user.id}`)
+    userService
+      .deleteUser(user.id)
       .catch(err => {
         setError(err.message)
         setUsers(oriUsers)
@@ -64,10 +55,10 @@ const TestLink = () => {
     const newUserId = users.length > 0 ? users[users.length - 1].id + 1 : 1;
     const newUser = {id: newUserId, name: 'Tendermeat'}
     setUsers([newUser, ...users])
-    // create a POST request
-    apiClient.post('/users/', newUser)
       // .then(res => setUsers([res.data, ...users]))
       // or destructure res.data
+      userService
+      .addUser(newUser)
       .then(({ data: savedUser }) => setUsers([savedUser, ...users]) )
       .catch(err => {
         setError(err.message)
@@ -80,7 +71,8 @@ const TestLink = () => {
     const updatedUser = {...user, name: user.name + '!'}
     setUsers(users.map( u => u.id === user.id ? updatedUser : u))
 
-    apiClient.patch(`/users/${user.id}`)
+    userService
+      .updateUser(updatedUser)
       .catch(err => {
         setError(err.message)
         setUsers(originalUsers)
