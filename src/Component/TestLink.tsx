@@ -1,5 +1,5 @@
 import { border } from "@chakra-ui/react";
-import axios, { CanceledError } from "axios"
+import apiClient, { CanceledError } from "../services/api-client";
 import { useEffect, useState } from "react"
 
 interface User {
@@ -8,11 +8,14 @@ interface User {
 }
 
 const TestLink = () => {
+  //create user, user as empty array
+  //the <User[]> syntax specifies that the users state variable will store an array of User
   const [ users, setUsers ] = useState<User[]>([]);
   const [ error, setError ] = useState('');
   // set loader state
   const [ isLoading, setLoading ] = useState(false);
 
+  // error messages and loading spinner
   useEffect(() =>{
     // get -> promise -> res / err
     //allows you to abort one or more Web requests as and when desired.
@@ -22,9 +25,9 @@ const TestLink = () => {
     //display loader
     setLoading(true);
 
-    axios
+    apiClient
     // configuration object as the 2nd parameter
-    .get<User[]>('https://jsonplaceholder.typicode.com/users', {signal: controller.signal})
+    .get<User[]>('/users', {signal: controller.signal})
     .then(res => {
       setUsers(res.data)
       // deactive where our promise is settled, accepted
@@ -48,7 +51,7 @@ const TestLink = () => {
     const oriUsers = [...users]
     setUsers(users.filter(u =>  u.id !== user.id))
 
-    axios.delete(`https://jsonplaceholder.typicode.com/users/${user.id}`)
+    apiClient.delete(`/users/${user.id}`)
       .catch(err => {
         setError(err.message)
         setUsers(oriUsers)
@@ -62,7 +65,7 @@ const TestLink = () => {
     const newUser = {id: newUserId, name: 'Tendermeat'}
     setUsers([newUser, ...users])
     // create a POST request
-    axios.post('https://jsonplaceholder.typicode.com/usersx/', newUser)
+    apiClient.post('/users/', newUser)
       // .then(res => setUsers([res.data, ...users]))
       // or destructure res.data
       .then(({ data: savedUser }) => setUsers([savedUser, ...users]) )
@@ -77,7 +80,7 @@ const TestLink = () => {
     const updatedUser = {...user, name: user.name + '!'}
     setUsers(users.map( u => u.id === user.id ? updatedUser : u))
 
-    axios.patch(`https://jsonplaceholder.typicode.com/users/${user.id}`)
+    apiClient.patch(`/users/${user.id}`)
       .catch(err => {
         setError(err.message)
         setUsers(originalUsers)
