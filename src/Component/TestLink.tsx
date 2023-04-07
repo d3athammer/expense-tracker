@@ -1,48 +1,16 @@
-import { border } from "@chakra-ui/react";
-import { CanceledError } from "../services/api-client";
-import { useEffect, useState } from "react"
 import userService,{ User } from "../services/user-service";
+import useUsers from "../hooks/useUsers";
 
 const TestLink = () => {
-  //create user, user as empty array
-  //the <User[]> syntax specifies that the users state variable will store an array of User
-  const [ users, setUsers ] = useState<User[]>([]);
-  const [ error, setError ] = useState('');
-  // set loader state
-  const [ isLoading, setLoading ] = useState(false);
 
-  // error messages and loading spinner
-  useEffect(() =>{
-    // get -> promise -> res / err
-    //allows you to abort one or more Web requests as and when desired.
-    //Using its constructor, a very standard way to cancel or abort asynchronous operations
-    //display loader
-    setLoading(true);
-    const {request, cancel} = userService.getAllUsers();
-      request.then(res => {
-        setUsers(res.data)
-        // deactive where our promise is settled, accepted
-        setLoading(false)})
-      .catch(err => {
-        // if the error thrown by Axios was due to a cancellation of the request,
-        //using the AbortController instance.
-        if (err instanceof CanceledError) return;
-        // otherwise, display error message
-        setError(err.message);
-      // deactive where our promise is settled, rejected
-        setLoading(false);
-      });
-      //
-    return () => cancel();
-  },[])
-
+  const { users, error, isLoading, setUsers, setError } = useUsers()
   //Delete user
   const deleteUser = (user: User) => {
     const oriUsers = [...users]
     setUsers(users.filter(u =>  u.id !== user.id))
 
     userService
-      .deleteUser(user.id)
+      .delete(user.id)
       .catch(err => {
         setError(err.message)
         setUsers(oriUsers)
@@ -58,7 +26,7 @@ const TestLink = () => {
       // .then(res => setUsers([res.data, ...users]))
       // or destructure res.data
       userService
-      .addUser(newUser)
+      .create(newUser)
       .then(({ data: savedUser }) => setUsers([savedUser, ...users]) )
       .catch(err => {
         setError(err.message)
@@ -72,7 +40,7 @@ const TestLink = () => {
     setUsers(users.map( u => u.id === user.id ? updatedUser : u))
 
     userService
-      .updateUser(updatedUser)
+      .update(updatedUser)
       .catch(err => {
         setError(err.message)
         setUsers(originalUsers)
